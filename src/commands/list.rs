@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
+use super::common::PathArgs;
 use crate::log;
 use xf::cat;
 use xf::utils::{PathContext, SizeDisplay};
@@ -23,6 +24,9 @@ pub struct Command {
 	/// display sizes as K/M/G etc.
 	#[arg(short = 'H', long, default_value_t = false)]
 	human_readable: bool,
+
+	#[command(flatten)]
+	path: PathArgs,
 }
 
 impl Command {
@@ -31,9 +35,9 @@ impl Command {
 			let path = path.with_extension("cat");
 
 			let result = if self.human_readable {
-				list(path, SizeDisplay)
+				list(path, SizeDisplay, &self.path)
 			} else {
-				list(path, identity)
+				list(path, identity, &self.path)
 			};
 
 			if let Err(e) = result {
@@ -49,7 +53,7 @@ impl Command {
 }
 
 // =============================================================================
-fn list<P, R, F>(source: P, formatter: F) -> Result<()>
+fn list<P, R, F>(source: P, formatter: F, args: &PathArgs) -> Result<()>
 where
 	P: AsRef<Path>,
 	R: std::fmt::Display,
@@ -64,6 +68,10 @@ where
 
 	let mut count = 0;
 	while reader.read_entry(&mut entry)? {
+		if args.is_filtered(&entry.path) {
+			continue;
+		}
+
 		writeln!(out, cstr!("  <b>{:>7}</> {:#} {}"), formatter(entry.size), entry.timestamp, entry.path)?;
 		count += 1;
 	}
