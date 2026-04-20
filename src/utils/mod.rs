@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // =============================================================================
-pub mod md5;
-pub mod utils;
+mod timestamp;
+pub use timestamp::*;
+
+#[cfg(test)]
+mod tests;
