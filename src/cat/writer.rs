@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 use super::*;
 use crate::md5::Digest;
-use crate::utils::DEFAULT_BUFSIZE;
+use crate::io::DEFAULT_BUFSIZE;
 
 use std::io::{BufWriter, Result, Write};
 
