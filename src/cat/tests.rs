@@ -115,3 +115,53 @@ file3.xml ASDF 1234567890 abcdabcdabcdabcdabcdabcdabcdabcd",
 		x => panic!("expected Err(ParseError(...)), got {x:?}"),
 	}
 }
+
+#[test]
+fn writer() {
+	let mut inner = Cursor::new(Vec::with_capacity(200));
+	let mut writer = Writer::new(&mut inner);
+	let mut hash = Digest([
+		0x01, 0x02, 0x03, 0x04, 0x55, 0x66, 0x77, 0x88, 0x0a, 0x0b, 0x0c, 0x0d, 0xde, 0xad, 0xbe, 0xef,
+	]);
+
+	if let Err(e) = writer.write("md/file 1.xml", 1234, 123456789.into(), &hash) {
+		panic!("{e}");
+	}
+
+	hash.reverse();
+	if let Err(e) = writer.write("md/file 2.xml", 5678, 987654321.into(), &hash) {
+		panic!("{e}");
+	}
+
+	drop(writer); // so i don't have to use ugly scoping hacks
+	assert_eq!(
+		str::from_utf8(inner.get_ref()).unwrap(),
+		"md/file 1.xml 1234 123456789 01020304556677880a0b0c0ddeadbeef
+md/file 2.xml 5678 987654321 efbeadde0d0c0b0a8877665504030201\n"
+	);
+}
+
+#[test]
+fn write_entry() {
+	let mut inner = Cursor::new(Vec::with_capacity(100));
+	let mut writer = Writer::new(&mut inner);
+	let entry = Entry {
+		path: "md/file 1.xml".into(),
+		hash: Digest([
+			0x01, 0x02, 0x03, 0x04, 0x55, 0x66, 0x77, 0x88, 0x0a, 0x0b, 0x0c, 0x0d, 0xde, 0xad, 0xbe, 0xef,
+		]),
+		size: 1234,
+		timestamp: 123456789.into(),
+		..Default::default()
+	};
+
+	if let Err(e) = writer.write_entry(&entry) {
+		panic!("{e}");
+	}
+
+	drop(writer);
+	assert_eq!(
+		str::from_utf8(inner.get_ref()).unwrap(),
+		"md/file 1.xml 1234 123456789 01020304556677880a0b0c0ddeadbeef\n"
+	);
+}
