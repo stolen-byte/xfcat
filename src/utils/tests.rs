@@ -2,6 +2,7 @@
 use super::*;
 
 use std::cmp::Ord;
+use std::path::Path;
 use std::time::{Duration, SystemTime};
 
 // =============================================================================
@@ -29,4 +30,9 @@ fn timestamp_formatting() {
 fn timestamp_ordering() {
 	assert!(Ord::cmp(&Timestamp(1000), &Timestamp(2000)).is_lt());
 	assert!(Ord::cmp(&Timestamp(2000), &Timestamp(2000)).is_eq());
+}
+
+#[test]
+fn as_context() {
+	assert_eq!("/some/file.txt".to_string(), Path::new("/some/file.txt").as_context());
 }

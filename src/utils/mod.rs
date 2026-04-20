@@ -1,8 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
 // =============================================================================
+pub const DEFAULT_BUFSIZE: usize = 1024 * 32; // 32KB
+
+// =============================================================================
 mod timestamp;
 pub use timestamp::*;
 
 #[cfg(test)]
 mod tests;
+
+// =============================================================================
+// small helper for adding paths to an error context
+pub trait PathContext {
+	fn as_context(&self) -> String;
+}
+
+impl<P: AsRef<std::path::Path>> PathContext for P {
+	fn as_context(&self) -> String {
+		self.as_ref().display().to_string()
+	}
+}
