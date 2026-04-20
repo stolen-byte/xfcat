@@ -1,0 +1,21 @@
+root = true
+
+[*]
+charset = utf-8
+indent_style = tab
+indent_size = 2
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 110
+
+[Makefile]
+indent_style = tab
+
+# because YAML (along with a fallacious argument) forbids tabs...
+[*.{yml,yaml}]
+indent_style = space
+quote_type = single
+
+[*.{cmd,bat,ps1,sln}]
+end_of_line = crlf

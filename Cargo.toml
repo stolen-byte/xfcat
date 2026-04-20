@@ -1,0 +1,85 @@
+[package]
+name = "xfcat"
+edition = "2024"
+license = "GPL-3.0-or-later"
+authors = ["StolenByte"]
+
+[lib]
+name = "xf"
+path = "src/lib.rs"
+
+[profile.dev]
+incremental = true
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+strip = true
+debug = false
+panic = "abort"
+
+[profile.perf]
+inherits = "release"
+strip = false
+debug = true
+
+[dependencies]
+anstream = "1.0.0"
+anyhow = "1.0.102"
+cfg-if = "1.0.4"
+clap = { version = "4.6.1", default-features = false, features = ["std", "color", "help", "usage", "derive"] }
+color-print = "0.3.7"
+paste = "1.0.15"
+
+[lints.rust]
+future_incompatible = { level = "warn", priority = -1 }
+nonstandard_style = { level = "warn", priority = -1 }
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+trait_duplication_in_bounds = "warn"
+
+# included in 'all', so reset back to deny
+correctness = { level = "deny", priority = -1 }
+
+# style
+collapsible_if = "allow"
+disallowed_macros = "deny"
+disallowed_methods = "deny"
+disallowed_types = "deny"
+
+# complexity
+explicit_write = "allow" # (e)println is banned
+
+# pedantic (some useful, but a LOT of silly rules)
+pedantic = { level = "warn", priority = -1 }
+must_use_candidate = "allow"
+wildcard_imports = "allow"
+unreadable_literal = "allow"
+too_many_lines = "allow"
+many_single_char_names = "allow"
+unnecessary_wraps = "allow"
+missing_panics_doc = "allow"
+missing_errors_doc = "allow"
+similar_names = "allow"
+inline_always = "allow"
+match_bool = "allow"
+ignored_unit_patterns = "allow"
+struct_excessive_bools = "allow"
+
+# restriction
+todo = "deny"
+mem_forget = "deny"
+filetype_is_file = "deny"
+dbg_macro = "warn"
+float_cmp_const = "warn"
+lossy_float_literal = "warn"
+mutex_integer = "warn"
+rc_mutex = "warn"
+rest_pat_in_fully_bound_structs = "warn"
+verbose_file_reads = "warn"
+default_union_representation = "warn"
+deref_by_slicing = "warn"
+if_then_some_else_none = "warn"
+infinite_loop = "warn"

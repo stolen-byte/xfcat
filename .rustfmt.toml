@@ -1,0 +1,30 @@
+hard_tabs = true
+newline_style = "Unix"
+max_width = 110
+# related to https://github.com/rust-lang/rustfmt/issues/5404
+fn_call_width = 106
+
+# array_width = 60
+# attr_fn_like_width = 70
+# chain_width = 60
+# fn_call_width = 60
+# fn_params_layout = "Tall|Compressed|Vertical"
+# force_explicit_abi = true|false
+# hard_tabs = true|false
+# match_arm_leading_pipes = "Always|Never|Preserve"
+# match_block_trailing_comma = false|true
+# max_width = 100
+# merge_derives = true|false
+# newline_style = "Auto|Native|Unix|Windows"
+# remove_nested_parens = true|false
+# reorder_imports = true|false
+# reorder_modules = true|false
+# short_array_element_width_threshold = 10
+# single_line_if_else_max_width = 50
+# single_line_let_else_max_width = 50
+# struct_lit_width = 18
+# struct_variant_width = 35
+# tab_spaces = 4
+# use_field_init_shorthand = false|true
+# use_small_heuristics = "Default|Off|Max"
+# use_try_shorthand = false|true

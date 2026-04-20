@@ -1,0 +1,8 @@
+#!/bin/sh
+set -e
+
+# ================================================================================
+cd "$(dirname "$0")/../"
+git config --local blame.ignoreRevsFile .git-blame-ignore-revs
+# ln -srf scripts/check .git/hooks/pre-commit
+printf '\033[1;32mdone\n'

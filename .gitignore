@@ -1,0 +1,28 @@
+# Editor
+.vs/
+.vscode/
+.zed/
+.idea/
+*~
+
+# OS
+.DS_STORE
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+
+# Build Artifacts
+debug/
+target/
+*.pdb
+
+# rustfmt
+**/*.rs.bk
+
+# Misc
+tmp/
+logs/
+*.log
+perf.*
+dhat.out.*

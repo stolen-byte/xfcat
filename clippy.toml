@@ -1,0 +1,11 @@
+allow-print-in-tests = true
+allow-unwrap-in-tests = true
+allow-dbg-in-tests = true
+
+disallowed-types = []
+disallowed-methods = []
+disallowed-macros = [
+	# footguns
+	{ path = "std::println", reason = "this macro panics on error, use write! instead." },
+	{ path = "std::eprintln", reason = "this macro panics on error, use write! instead." },
+]
