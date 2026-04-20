@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 use crate::log;
 use xf::cat;
-use xf::utils::PathContext;
+use xf::utils::{PathContext, SizeDisplay};
 
+use std::convert::identity;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -18,6 +19,10 @@ pub struct Command {
 	/// input files
 	#[arg(required = true)]
 	inputs: Vec<PathBuf>,
+
+	/// display sizes as K/M/G etc.
+	#[arg(short = 'H', long, default_value_t = false)]
+	human_readable: bool,
 }
 
 impl Command {
@@ -25,7 +30,13 @@ impl Command {
 		for path in &self.inputs {
 			let path = path.with_extension("cat");
 
-			if let Err(e) = list(path) {
+			let result = if self.human_readable {
+				list(path, SizeDisplay)
+			} else {
+				list(path, identity)
+			};
+
+			if let Err(e) = result {
 				if crate::is_sigpipe(&e) {
 					return Err(e);
 				}
@@ -38,7 +49,12 @@ impl Command {
 }
 
 // =============================================================================
-fn list<P: AsRef<Path>>(source: P) -> Result<()> {
+fn list<P, R, F>(source: P, formatter: F) -> Result<()>
+where
+	P: AsRef<Path>,
+	R: std::fmt::Display,
+	F: Fn(u64) -> R,
+{
 	let mut out = stdout().lock();
 	let source = source.as_ref();
 	let mut reader = cat::Reader::new(File::open(source).with_context(|| source.as_context())?);
@@ -48,7 +64,7 @@ fn list<P: AsRef<Path>>(source: P) -> Result<()> {
 
 	let mut count = 0;
 	while reader.read_entry(&mut entry)? {
-		writeln!(out, cstr!("  <b>{:>7}</> {:#} {}"), entry.size, entry.timestamp, entry.path)?;
+		writeln!(out, cstr!("  <b>{:>7}</> {:#} {}"), formatter(entry.size), entry.timestamp, entry.path)?;
 		count += 1;
 	}
 

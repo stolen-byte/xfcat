@@ -4,6 +4,9 @@
 mod timestamp;
 pub use timestamp::*;
 
+mod size;
+pub use size::*;
+
 #[cfg(test)]
 mod tests;
 
