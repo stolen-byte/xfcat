@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 use super::*;
+
 use std::io::Cursor;
 
 // =============================================================================
@@ -164,4 +165,21 @@ fn write_entry() {
 		str::from_utf8(inner.get_ref()).unwrap(),
 		"md/file 1.xml 1234 123456789 01020304556677880a0b0c0ddeadbeef\n"
 	);
+}
+
+#[test]
+fn entry_reader() {
+	let mut src = Cursor::new(b"xxxx11111111xxxx");
+	let entry = Entry {
+		path: String::default(),
+		hash: Digest::default(),
+		timestamp: Timestamp::default(),
+		size: 8,
+		offset: 4,
+	};
+
+	let mut r = entry.reader(&mut src).unwrap();
+	let mut result = String::with_capacity(8);
+	assert_eq!(r.read_to_string(&mut result).unwrap() as u64, entry.size);
+	assert_eq!("11111111", result);
 }

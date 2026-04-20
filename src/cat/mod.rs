@@ -2,6 +2,8 @@
 use crate::md5::Digest;
 use crate::utils::Timestamp;
 
+use std::io::{Read, Result as IoResult, Seek, SeekFrom};
+
 // =============================================================================
 #[derive(Default, Debug, PartialEq)]
 pub struct Entry {
@@ -17,6 +19,11 @@ impl Entry {
 		let mut r = Self::default();
 		r.path.reserve_exact(cap);
 		r
+	}
+
+	pub fn reader<R: Read + Seek>(&self, source: &mut R) -> IoResult<impl Read> {
+		source.seek(SeekFrom::Start(self.offset))?;
+		Ok(source.take(self.size))
 	}
 }
 
