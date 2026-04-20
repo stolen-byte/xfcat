@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// use commands::*;
+use commands::*;
 
 use std::process::ExitCode;
 
@@ -14,9 +14,10 @@ cli! {
 		version,
 		about,
 		long_about: None,
-		// after_help: "",
+		after_help: "note: path extensions can be either .cat/.dat, or be omitted altogether.",
 	},
 	commands = {
+		list: "list contents specified packages.",
 	}
 }
 
