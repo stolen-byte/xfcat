@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 use super::*;
 
-use std::io::Cursor;
+use std::io::{self, Cursor};
 
 // =============================================================================
 #[test]
@@ -15,4 +15,19 @@ fn stream_copier() {
 
 	assert_eq!(size, DATASIZE as u64);
 	assert_eq!(w.as_slice(), r.get_ref());
+}
+
+#[test]
+fn tee_writer() {
+	const DATA: &[u8] = b"The quick brown fox jumps over the lazy dog";
+	let mut r = Cursor::new(DATA);
+	let mut buf1 = Vec::with_capacity(DATA.len());
+	let mut buf2 = Vec::with_capacity(DATA.len());
+	let mut writer = TeeWriter::new(buf1.by_ref(), buf2.by_ref());
+
+	let copied = io::copy(&mut r, &mut writer).unwrap();
+
+	assert_eq!(copied, DATA.len() as u64);
+	assert_eq!(buf1.as_slice(), DATA);
+	assert_eq!(buf2.as_slice(), DATA);
 }
