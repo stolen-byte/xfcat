@@ -1,16 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::common::{FilterArgs, SortArgs, SortMode};
-use crate::log;
-use xf::cat::{self, Entry, Result as CatResult};
-use xf::utils::{PathContext, SizeFormat};
-
-use std::fs::File;
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::{
+	fs::File,
+	io::Write,
+	path::{Path, PathBuf},
+};
 
 use anstream::stdout;
 use anyhow::{Context, Result};
-use color_print::*;
+use color_print::cstr;
+
+use crate::{
+	commands::common::{FilterArgs, SortArgs, SortMode},
+	log,
+};
+use xf::{
+	cat::{self, Entry, Result as CatResult},
+	utils::{PathContext, SizeFormat},
+};
 
 // =============================================================================
 #[derive(clap::Args)]

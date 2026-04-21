@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::*;
+use std::{
+	cmp::Ord,
+	path::Path,
+	time::{Duration, SystemTime},
+};
 
-use std::cmp::Ord;
-use std::path::Path;
-use std::time::{Duration, SystemTime};
+use super::*;
 
 // =============================================================================
 #[test]

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::platform::*;
-
 use std::{fmt, ops, str};
+
+use super::platform::*;
 
 // =============================================================================
 #[derive(Debug, PartialEq)]

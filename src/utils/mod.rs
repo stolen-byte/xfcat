@@ -1,14 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-
-// =============================================================================
-mod timestamp;
-pub use timestamp::*;
-
 mod size;
-pub use size::*;
+mod timestamp;
 
 #[cfg(test)]
 mod tests;
+
+// =============================================================================
+pub use {size::*, timestamp::*};
 
 // =============================================================================
 // small helper for adding paths to an error context

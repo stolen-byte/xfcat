@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::*;
-use crate::md5::Digest;
-use crate::io::DEFAULT_BUFSIZE;
-
 use std::io::{BufWriter, Result, Write};
+
+use super::*;
+use crate::{io::DEFAULT_BUFSIZE, md5::Digest};
 
 // =============================================================================
 pub struct Writer<W: Write> {

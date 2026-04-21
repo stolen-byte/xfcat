@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use commands::*;
-
-use std::process::ExitCode;
-
-// =============================================================================
 #[macro_use]
 mod commands;
 mod log;
+
+use std::process::ExitCode;
+
+use commands::*;
 
 // =============================================================================
 cli! {

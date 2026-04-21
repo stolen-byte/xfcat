@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::Logger;
-
 use std::io::Write;
 
 use anstream::stderr;
+
+use super::Logger;
 
 // =============================================================================
 pub struct ConsoleLogger;

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use std::io::{Read, Result, Write};
-use std::mem::MaybeUninit;
-use std::slice;
+use std::{
+	io::{Read, Result, Write},
+	mem::MaybeUninit,
+	slice,
+};
 
 // =============================================================================
 /// a customizable & reusable version of `io::copy`

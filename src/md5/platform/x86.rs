@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::*;
-
-use std::ptr;
-use std::slice;
+use std::{ptr, slice};
 
 #[cfg(target_arch = "x86")]
 use core::arch::x86::*;
 #[cfg(target_arch = "x86_64")]
 use core::arch::x86_64::*;
+
+use super::*;
 
 // =============================================================================
 #[inline]

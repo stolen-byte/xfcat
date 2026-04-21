@@ -1,8 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use crate::md5::Digest;
-use crate::utils::Timestamp;
+mod reader;
+mod writer;
 
 use std::io::{Read, Result as IoResult, Seek, SeekFrom};
+
+use crate::{md5::Digest, utils::Timestamp};
+
+#[cfg(test)]
+mod tests;
+
+// =============================================================================
+pub use {reader::*, writer::*};
 
 // =============================================================================
 #[derive(Default, Debug, PartialEq)]
@@ -28,11 +36,3 @@ impl Entry {
 }
 
 // =============================================================================
-mod reader;
-pub use reader::*;
-
-mod writer;
-pub use writer::*;
-
-#[cfg(test)]
-mod tests;

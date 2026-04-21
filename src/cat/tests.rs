@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::*;
-
 use std::io::Cursor;
+
+use super::*;
 
 // =============================================================================
 #[test]

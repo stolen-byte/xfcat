@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::Entry;
-use crate::md5::{Digest, DigestError};
-use crate::io::DEFAULT_BUFSIZE;
+use std::{
+	fmt,
+	io::{self, BufRead, BufReader, Read},
+};
 
-use std::fmt;
-use std::io::{self, BufRead, BufReader, Read};
+use super::Entry;
+use crate::{
+	io::DEFAULT_BUFSIZE,
+	md5::{Digest, DigestError},
+};
 
 // =============================================================================
 #[derive(Debug)]

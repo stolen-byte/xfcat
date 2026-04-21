@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 #![allow(unused_imports)]
-use std::fmt::{self, Arguments};
-use std::panic::PanicHookInfo;
-use std::sync::{Arc, OnceLock};
+mod console;
+
+use std::{
+	fmt::{self, Arguments},
+	panic::PanicHookInfo,
+	sync::{Arc, OnceLock},
+};
 
 use color_print::*;
 
 // =============================================================================
-mod console;
 pub use console::*;
 
 // =============================================================================

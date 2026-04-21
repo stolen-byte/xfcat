@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use std::io::Write;
-
-// =============================================================================
 mod digest;
 mod platform;
-pub use digest::*;
+
+use std::io::Write;
 
 #[cfg(test)]
 mod tests;
+
+// =============================================================================
+pub use digest::*;
 
 // =============================================================================
 // based on ietf.org/rfc/rfc1321.txt, modified for 64bit

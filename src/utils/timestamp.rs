@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use std::fs::FileTimes;
-use std::time::{Duration, SystemTime};
-use std::{fmt, ops};
+use std::{
+	fmt,
+	fs::FileTimes,
+	ops,
+	time::{Duration, SystemTime},
+};
 
 use time::UtcDateTime;
 

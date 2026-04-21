@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use std::fmt::{self, Alignment, Display, Formatter, Result, Write};
-use std::result::Result as StdResult;
+use std::{
+	fmt::{self, Alignment, Display, Formatter, Result, Write},
+	result::Result as StdResult,
+};
 
 // =============================================================================
 const SIZE_SUFFIXES: [&str; 4] = ["B", "K", "M", "G"];
