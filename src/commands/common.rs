@@ -2,7 +2,7 @@
 
 // =============================================================================
 #[derive(clap::Args)]
-pub struct PathArgs {
+pub struct FilterArgs {
 	/// glob pattern to match file paths against.
 	///
 	///     ?  Matches any single character
@@ -16,10 +16,37 @@ pub struct PathArgs {
 	filter: Option<String>,
 }
 
-impl PathArgs {
+impl FilterArgs {
 	pub fn is_filtered(&self, path: &str) -> bool {
 		self.filter
 			.as_ref()
 			.is_some_and(|f| !fast_glob::glob_match(f, path))
 	}
+}
+
+// =============================================================================
+#[derive(clap::Args)]
+#[group(required = false, multiple = false)]
+pub struct SortMode {
+	/// sort alphabetically by name
+	#[arg(short, long, default_value_t = false)]
+	pub name: bool,
+
+	/// sort by file size, largest first
+	#[arg(short = 'S', long, default_value_t = false)]
+	pub size: bool,
+
+	/// sort by time, newest first
+	#[arg(short = 't', long, default_value_t = false)]
+	pub time: bool,
+}
+
+#[derive(clap::Args)]
+pub struct SortArgs {
+	#[command(flatten)]
+	pub by: SortMode,
+
+	/// reverse order while sorting
+	#[arg(short, long, default_value_t = false)]
+	pub reverse: bool,
 }

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-use super::common::PathArgs;
+use super::common::{FilterArgs, SortArgs, SortMode};
 use crate::log;
-use xf::cat;
+use xf::cat::{self, Entry, Result as CatResult};
 use xf::utils::{PathContext, SizeFormat};
 
 use std::fs::File;
@@ -25,7 +25,10 @@ pub struct Command {
 	human_readable: bool,
 
 	#[command(flatten)]
-	path: PathArgs,
+	filter: FilterArgs,
+
+	#[command(flatten)]
+	sort: SortArgs,
 }
 
 impl Command {
@@ -37,32 +40,71 @@ impl Command {
 				_ => path.clone(),
 			};
 
-			if let Err(e) = list(source, self.human_readable, &self.path) {
+			if let Err(e) = list(source, self.human_readable, &self.filter, &self.sort) {
 				if crate::is_sigpipe(&e) {
 					return Err(e);
 				}
 				log::error!("{e:#}");
 			}
 		}
-
 		Ok(())
 	}
 }
 
 // =============================================================================
-fn list<P: AsRef<Path>>(source: P, human_readable: bool, pargs: &PathArgs) -> Result<()> {
+fn list<P: AsRef<Path>>(source: P, human_readable: bool, filter: &FilterArgs, sort: &SortArgs) -> Result<()> {
 	let mut out = stdout().lock();
 	let source = source.as_ref();
-	let mut reader = cat::Reader::new(File::open(source).with_context(|| source.as_context())?);
-	let mut entry = cat::Entry::with_capacity(256);
+	let reader = cat::Reader::new(File::open(source).with_context(|| source.as_context())?);
+
+	let iter = reader.filter(|r| r.as_ref().map_or(true, |entry| !filter.is_filtered(&entry.path)));
 
 	writeln!(out, cstr!("<m><u>{}</>:"), source.display())?;
+	let count = if sort.by.name || sort.by.size || sort.by.time {
+		list_sorted(iter, human_readable, &sort.by, sort.reverse, &mut out)
+	} else {
+		list_entries(iter, human_readable, &mut out)
+	}?;
 
+	writeln!(out, cstr!("total: <g>{}</> entries.\n"), count)?;
+	Ok(())
+}
+
+fn list_sorted<I, O>(
+	entries: I,
+	human_readable: bool,
+	sort: &SortMode,
+	reverse: bool,
+	out: &mut O,
+) -> Result<usize>
+where
+	I: Iterator<Item = CatResult<Entry>>,
+	O: Write,
+{
+	let mut tmp = entries.collect::<CatResult<Vec<_>>>()?; // short circuit errors here
+	match (sort.name, sort.size, sort.time) {
+		(true, _, _) => tmp.sort_by(|a, b| Ord::cmp(&a.path, &b.path)), // alphabetical (case-sensitive)
+		(_, true, _) => tmp.sort_by(|a, b| Ord::cmp(&b.size, &a.size)), // descending
+		(_, _, true) => tmp.sort_by(|a, b| Ord::cmp(&b.timestamp, &a.timestamp)), // descending
+		_ => std::unreachable!(),
+	}
+
+	let iter = tmp.into_iter().map(Ok);
+	if reverse {
+		list_entries(iter.rev(), human_readable, out)
+	} else {
+		list_entries(iter, human_readable, out)
+	}
+}
+
+fn list_entries<I, O>(entries: I, human_readable: bool, out: &mut O) -> Result<usize>
+where
+	I: Iterator<Item = CatResult<Entry>>,
+	O: Write,
+{
 	let mut count = 0;
-	while reader.read_entry(&mut entry)? {
-		if pargs.is_filtered(&entry.path) {
-			continue;
-		}
+	for entry in entries {
+		let entry = entry?;
 
 		let sf = if human_readable {
 			SizeFormat::Human(entry.size)
@@ -74,6 +116,5 @@ fn list<P: AsRef<Path>>(source: P, human_readable: bool, pargs: &PathArgs) -> Re
 		count += 1;
 	}
 
-	writeln!(out, cstr!("total: <g>{}</> entries.\n"), count)?;
-	Ok(())
+	Ok(count)
 }
