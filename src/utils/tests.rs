@@ -39,16 +39,18 @@ fn as_context() {
 
 #[test]
 fn size_formatting() {
-	assert_eq!("123B", SizeDisplay(123).to_string());
-	assert_eq!("123K", SizeDisplay(125952).to_string());
-	assert_eq!("123.5K", SizeDisplay(126464).to_string());
-	assert_eq!("123M", SizeDisplay(128974848).to_string());
-	assert_eq!("123.5M", SizeDisplay(129499136).to_string());
-	assert_eq!("123G", SizeDisplay(132070244352).to_string());
-	assert_eq!("123.5G", SizeDisplay(132607115264).to_string());
+	assert_eq!("123456", SizeFormat::Raw(123456).to_string());
+
+	assert_eq!("123B", SizeFormat::Human(123).to_string());
+	assert_eq!("123K", SizeFormat::Human(125952).to_string());
+	assert_eq!("123.5K", SizeFormat::Human(126464).to_string());
+	assert_eq!("123M", SizeFormat::Human(128974848).to_string());
+	assert_eq!("123.5M", SizeFormat::Human(129499136).to_string());
+	assert_eq!("123G", SizeFormat::Human(132070244352).to_string());
+	assert_eq!("123.5G", SizeFormat::Human(132607115264).to_string());
 
 	// alignment & width
-	assert_eq!(format!("{:|>10}", SizeDisplay(132607115264)), "||||123.5G", "align right");
-	assert_eq!(format!("{:|<10}", SizeDisplay(132607115264)), "123.5G||||", "align left");
-	assert_eq!(format!("{:|^10}", SizeDisplay(132607115264)), "||123.5G||", "align center");
+	assert_eq!(format!("{:|>10}", SizeFormat::Human(132607115264)), "||||123.5G", "align right");
+	assert_eq!(format!("{:|<10}", SizeFormat::Human(132607115264)), "123.5G||||", "align left");
+	assert_eq!(format!("{:|^10}", SizeFormat::Human(132607115264)), "||123.5G||", "align center");
 }

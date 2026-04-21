@@ -61,24 +61,32 @@ impl Padding {
 }
 
 // =============================================================================
-pub struct SizeDisplay(pub u64);
+// kinda gross, but intended usage is optional, and using a newtype creates problems.
+#[derive(Debug, Eq, PartialEq, Copy, Clone)]
+pub enum SizeFormat {
+	Human(u64),
+	Raw(u64),
+}
 
-impl Display for SizeDisplay {
+impl Display for SizeFormat {
 	fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-		let mut buf = ryu::Buffer::new();
-		let comps = make_components(&mut buf, self.0);
+		match self {
+			SizeFormat::Human(s) => {
+				let mut buf = ryu::Buffer::new();
+				let comps = make_components(&mut buf, *s);
 
-		if let Some(width) = f.width() {
-			#[allow(clippy::cast_possible_truncation, reason = "width is stored as u16")]
-			let lpad = Padding::new((width - comps.len()) as u16, f.fill());
-			let rpad = lpad.write_pre(f.align().unwrap_or(Alignment::Left), f)?;
-			comps.write(f)?;
-			rpad.write(f)?;
-		} else {
-			comps.write(f)?;
+				if let Some(width) = f.width() {
+					#[allow(clippy::cast_possible_truncation, reason = "width is stored as u16")]
+					let lpad = Padding::new((width - comps.len()) as u16, f.fill());
+					let rpad = lpad.write_pre(f.align().unwrap_or(Alignment::Left), f)?;
+					comps.write(f)?;
+					rpad.write(f)
+				} else {
+					comps.write(f)
+				}
+			}
+			SizeFormat::Raw(s) => s.fmt(f),
 		}
-
-		Ok(())
 	}
 }
 

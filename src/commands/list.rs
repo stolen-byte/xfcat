@@ -2,9 +2,8 @@
 use super::common::PathArgs;
 use crate::log;
 use xf::cat;
-use xf::utils::{PathContext, SizeDisplay};
+use xf::utils::{PathContext, SizeFormat};
 
-use std::convert::identity;
 use std::fs::File;
 use std::io::Write;
 use std::path::{Path, PathBuf};
@@ -32,15 +31,13 @@ pub struct Command {
 impl Command {
 	pub fn execute(&self) -> Result<()> {
 		for path in &self.inputs {
-			let path = path.with_extension("cat");
-
-			let result = if self.human_readable {
-				list(path, SizeDisplay, &self.path)
-			} else {
-				list(path, identity, &self.path)
+			// allow specifying path to either .cat, .dat, or omission.
+			let source = match path.extension().and_then(|e| e.to_str()) {
+				Some("dat") | None => path.with_extension("cat"),
+				_ => path.clone(),
 			};
 
-			if let Err(e) = result {
+			if let Err(e) = list(source, self.human_readable, &self.path) {
 				if crate::is_sigpipe(&e) {
 					return Err(e);
 				}
@@ -53,12 +50,7 @@ impl Command {
 }
 
 // =============================================================================
-fn list<P, R, F>(source: P, formatter: F, args: &PathArgs) -> Result<()>
-where
-	P: AsRef<Path>,
-	R: std::fmt::Display,
-	F: Fn(u64) -> R,
-{
+fn list<P: AsRef<Path>>(source: P, human_readable: bool, pargs: &PathArgs) -> Result<()> {
 	let mut out = stdout().lock();
 	let source = source.as_ref();
 	let mut reader = cat::Reader::new(File::open(source).with_context(|| source.as_context())?);
@@ -68,11 +60,17 @@ where
 
 	let mut count = 0;
 	while reader.read_entry(&mut entry)? {
-		if args.is_filtered(&entry.path) {
+		if pargs.is_filtered(&entry.path) {
 			continue;
 		}
 
-		writeln!(out, cstr!("  <b>{:>7}</> {:#} {}"), formatter(entry.size), entry.timestamp, entry.path)?;
+		let sf = if human_readable {
+			SizeFormat::Human(entry.size)
+		} else {
+			SizeFormat::Raw(entry.size)
+		};
+
+		writeln!(out, cstr!("  <b>{:>7}</> {:#} {}"), sf, entry.timestamp, entry.path)?;
 		count += 1;
 	}
 
