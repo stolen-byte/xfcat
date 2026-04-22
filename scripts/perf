@@ -5,6 +5,8 @@ set -e
 # ================================================================================
 rm -f perf.data perf.out 2>/dev/null
 RUSTFLAGS='-Ctarget-cpu=native -Cforce-frame-pointers=yes' cargo build --profile perf
-perf record -g -F 999 --call-graph=dwarf ./target/perf/xfcat $@
+perf record -g -F 999 --call-graph=dwarf ./target/perf/xfcat $@ 1>/dev/null
 # convert report to text data for external viewers
 perf script >perf.out
+# generate dhat report
+valgrind --tool=dhat ./target/perf/xfcat $@ 1>/dev/null
