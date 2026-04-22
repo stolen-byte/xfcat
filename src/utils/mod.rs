@@ -19,3 +19,14 @@ impl<P: AsRef<std::path::Path>> PathContext for P {
 		self.as_ref().display().to_string()
 	}
 }
+
+// =============================================================================
+pub fn init_threadpool(threads: Option<usize>) {
+	use rayon::ThreadPoolBuilder;
+	use std::thread;
+
+	ThreadPoolBuilder::new()
+		.num_threads(threads.unwrap_or_else(|| thread::available_parallelism().unwrap().get()))
+		.build_global()
+		.unwrap();
+}

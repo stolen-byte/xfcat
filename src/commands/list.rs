@@ -8,14 +8,15 @@ use std::{
 use anstream::stdout;
 use anyhow::{Context, Result};
 use color_print::cstr;
+use rayon::prelude::*;
 
 use crate::{
-	commands::common::{FilterArgs, SortArgs, SortMode},
+	commands::common::{FilterArgs, SortArgs},
 	log,
 };
 use xf::{
 	cat::{self, Entry, Result as CatResult},
-	utils::{PathContext, SizeFormat},
+	utils::{self, PathContext, SizeFormat},
 };
 
 // =============================================================================
@@ -39,88 +40,69 @@ pub struct Command {
 
 impl Command {
 	pub fn execute(&self) -> Result<()> {
-		for path in &self.inputs {
-			// allow specifying path to either .cat, .dat, or omission.
-			let source = match path.extension().and_then(|e| e.to_str()) {
-				Some("dat") | None => path.with_extension("cat"),
-				_ => path.clone(),
-			};
+		utils::init_threadpool(None);
 
-			if let Err(e) = list(source, self.human_readable, &self.filter, &self.sort) {
-				if crate::is_sigpipe(&e) {
-					return Err(e);
+		self.inputs
+			.par_iter()
+			.enumerate()
+			.map(|(i, p)| (i, load_entries(p, &self.filter, &self.sort)))
+			.try_for_each(|(i, result)| {
+				// lock here so smaller packages can be slowly writing out to term while others are processing
+				let mut out = stdout().lock();
+				let source = &self.inputs[i];
+
+				match result {
+					Ok(entries) => {
+						let count = entries.len();
+						writeln!(out, cstr!("\n<m><u>{}</>:"), source.display())?;
+
+						for entry in entries {
+							let sf = if self.human_readable {
+								SizeFormat::Human(entry.size)
+							} else {
+								SizeFormat::Raw(entry.size)
+							};
+							writeln!(out, cstr!("  <b>{:>7}</> {:#} {}"), sf, entry.timestamp, entry.path)?;
+						}
+
+						writeln!(out, cstr!("total: <g>{}</> entries.\n"), count)?;
+					}
+					Err(e) => {
+						if crate::is_sigpipe(&e) {
+							return Err(e);
+						}
+						log::error!("{e:#}");
+					}
 				}
-				log::error!("{e:#}");
-			}
-		}
-		Ok(())
+
+				Ok(())
+			})
 	}
 }
 
 // =============================================================================
-fn list<P: AsRef<Path>>(source: P, human_readable: bool, filter: &FilterArgs, sort: &SortArgs) -> Result<()> {
-	let mut out = stdout().lock();
-	let source = source.as_ref();
-	let reader = cat::Reader::new(File::open(source).with_context(|| source.as_context())?);
+fn load_entries(source: &Path, filter: &FilterArgs, sort: &SortArgs) -> Result<Vec<Entry>> {
+	// allow specifying path to either .cat, .dat, or omission.
+	let source = match source.extension().and_then(|e| e.to_str()) {
+		Some("dat") | None => source.with_extension("cat"),
+		_ => source.to_owned(),
+	};
 
-	let iter = reader.filter(|r| r.as_ref().map_or(true, |entry| !filter.is_filtered(&entry.path)));
+	let file = File::open(&source).with_context(|| source.as_context())?;
+	let mut result = cat::Reader::new(file)
+		.filter(|r| r.as_ref().map_or(true, |entry| !filter.is_filtered(&entry.path)))
+		.collect::<CatResult<Vec<Entry>>>()?;
 
-	writeln!(out, cstr!("<m><u>{}</>:"), source.display())?;
-	let count = if sort.by.name || sort.by.size || sort.by.time {
-		list_sorted(iter, human_readable, &sort.by, sort.reverse, &mut out)
-	} else {
-		list_entries(iter, human_readable, &mut out)
-	}?;
-
-	writeln!(out, cstr!("total: <g>{}</> entries.\n"), count)?;
-	Ok(())
-}
-
-fn list_sorted<I, O>(
-	entries: I,
-	human_readable: bool,
-	sort: &SortMode,
-	reverse: bool,
-	out: &mut O,
-) -> Result<usize>
-where
-	I: Iterator<Item = CatResult<Entry>>,
-	O: Write,
-{
-	let mut tmp = entries.collect::<CatResult<Vec<_>>>()?; // short circuit errors here
-	match (sort.name, sort.size, sort.time) {
-		(true, _, _) => tmp.sort_by(|a, b| Ord::cmp(&a.path, &b.path)), // alphabetical (case-sensitive)
-		(_, true, _) => tmp.sort_by(|a, b| Ord::cmp(&b.size, &a.size)), // descending
-		(_, _, true) => tmp.sort_by(|a, b| Ord::cmp(&b.timestamp, &a.timestamp)), // descending
-		_ => std::unreachable!(),
+	match (sort.by.name, sort.by.size, sort.by.time) {
+		(true, _, _) => result.sort_by(|a, b| Ord::cmp(&a.path, &b.path)), // alphabetical (case-sensitive)
+		(_, true, _) => result.sort_by(|a, b| Ord::cmp(&b.size, &a.size)), // descending
+		(_, _, true) => result.sort_by(|a, b| Ord::cmp(&b.timestamp, &a.timestamp)), // descending
+		_ => (),
 	}
 
-	let iter = tmp.into_iter().map(Ok);
-	if reverse {
-		list_entries(iter.rev(), human_readable, out)
-	} else {
-		list_entries(iter, human_readable, out)
-	}
-}
-
-fn list_entries<I, O>(entries: I, human_readable: bool, out: &mut O) -> Result<usize>
-where
-	I: Iterator<Item = CatResult<Entry>>,
-	O: Write,
-{
-	let mut count = 0;
-	for entry in entries {
-		let entry = entry?;
-
-		let sf = if human_readable {
-			SizeFormat::Human(entry.size)
-		} else {
-			SizeFormat::Raw(entry.size)
-		};
-
-		writeln!(out, cstr!("  <b>{:>7}</> {:#} {}"), sf, entry.timestamp, entry.path)?;
-		count += 1;
+	if sort.reverse {
+		result.reverse();
 	}
 
-	Ok(count)
+	Ok(result)
 }
