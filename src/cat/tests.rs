@@ -91,9 +91,18 @@ fn reader_invalid_entries() {
 		}
 	};
 
-	run("path/to/file.xml ABCD 1234567890 abcdabcdabcdabcdabcdabcdabcdabcd\n", "invalid size");
-	run("path/to/file.xml 1234 ABCDEFGHIJ abcdabcdabcdabcdabcdabcdabcdabcd\n", "invalid timestamp");
-	run("path/to/file.xml 1234 ABCDEFGHIJ abcdabcdabcdabcdxxxxabcdabcdabcd\n", "invalid hash character");
+	run(
+		"path/to/file.xml ABCD 1234567890 abcdabcdabcdabcdabcdabcdabcdabcd\n",
+		"invalid size",
+	);
+	run(
+		"path/to/file.xml 1234 ABCDEFGHIJ abcdabcdabcdabcdabcdabcdabcdabcd\n",
+		"invalid timestamp",
+	);
+	run(
+		"path/to/file.xml 1234 ABCDEFGHIJ abcdabcdabcdabcdxxxxabcdabcdabcd\n",
+		"invalid hash character",
+	);
 	run("path/to/file.xml 1234 ABCDEFGHIJ abcdabcdabcdabcd\n", "invalid hash length");
 	run("path/to/file.xml 1234 1234567890\n", "missing hash");
 	run("path/to/file.xml 1234\n", "missing timestamp");

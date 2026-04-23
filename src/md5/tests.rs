@@ -27,7 +27,11 @@ fn md5_digest_parse_error() {
 	match "010k0304556677880a0b0c0ddeadbeef".parse::<Digest>() {
 		Ok(r) => panic!("expected error, got: {r}"),
 		Err(e) => {
-			assert_eq!(DigestError::InvalidCharacter('k', 3), e, "error should contain invalid char & pos");
+			assert_eq!(
+				DigestError::InvalidCharacter('k', 3),
+				e,
+				"error should contain invalid char & pos"
+			);
 		}
 	}
 }

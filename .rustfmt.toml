@@ -2,7 +2,7 @@ hard_tabs = true
 newline_style = "Unix"
 max_width = 110
 # related to https://github.com/rust-lang/rustfmt/issues/5404
-fn_call_width = 106
+fn_call_width = 80
 
 # array_width = 60
 # attr_fn_like_width = 70

@@ -52,9 +52,9 @@ fn size_formatting() {
 	assert_eq!("123.5G", SizeFormat::Human(132607115264).to_string());
 
 	// alignment & width
-	assert_eq!(format!("{:|>10}", SizeFormat::Human(132607115264)), "||||123.5G", "align right");
-	assert_eq!(format!("{:|<10}", SizeFormat::Human(132607115264)), "123.5G||||", "align left");
-	assert_eq!(format!("{:|^10}", SizeFormat::Human(132607115264)), "||123.5G||", "align center");
+	assert_eq!(format!("{:|>10}", SizeFormat::Human(132607115264)), "||||123.5G", "right");
+	assert_eq!(format!("{:|<10}", SizeFormat::Human(132607115264)), "123.5G||||", "left");
+	assert_eq!(format!("{:|^10}", SizeFormat::Human(132607115264)), "||123.5G||", "center");
 }
 
 #[test]
@@ -92,7 +92,10 @@ fn join_empty_path() {
 #[test]
 fn format_duration() {
 	assert_eq!(FormattedDuration(Duration::from_secs(12)).to_string(), "00:12");
-	assert_eq!(FormattedDuration(Duration::from_mins(12) + Duration::from_secs(34)).to_string(), "12:34");
+	assert_eq!(
+		FormattedDuration(Duration::from_mins(12) + Duration::from_secs(34)).to_string(),
+		"12:34"
+	);
 	assert_eq!(
 		FormattedDuration(Duration::from_hours(12) + Duration::from_mins(34) + Duration::from_secs(56))
 			.to_string(),
