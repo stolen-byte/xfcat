@@ -17,6 +17,7 @@ cli! {
 	},
 	commands = {
 		list: "list contents specified packages.",
+		unpack: "extract contents of specified packages.",
 	}
 }
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 use std::{
 	cmp::Ord,
-	path::Path,
+	path::{Path, PathBuf},
 	time::{Duration, SystemTime},
 };
 
@@ -55,4 +55,76 @@ fn size_formatting() {
 	assert_eq!(format!("{:|>10}", SizeFormat::Human(132607115264)), "||||123.5G", "align right");
 	assert_eq!(format!("{:|<10}", SizeFormat::Human(132607115264)), "123.5G||||", "align left");
 	assert_eq!(format!("{:|^10}", SizeFormat::Human(132607115264)), "||123.5G||", "align center");
+}
+
+#[test]
+fn join_path() {
+	use super::join_path;
+
+	let tests = [
+		// base, sub, expected
+		("", "/some/file.txt", "/some/file.txt"), // empty base path is fine
+		("", "some/file.txt", "some/file.txt"),
+		("", "/", "/"),
+		("/", "/some/file.txt", "/some/file.txt"),
+		("/", "some/file.txt", "/some/file.txt"),
+		("/some/path", "to/a/file.txt", "/some/path/to/a/file.txt"),
+		("/some/path", "/to/a/file.txt", "/some/path/to/a/file.txt"),
+		("/some/path", "////to/a/file.txt", "/some/path/to/a/file.txt"),
+	];
+
+	for (base, sub, expected) in tests {
+		let mut buf = PathBuf::from(base);
+		let joined = join_path(&mut buf, sub);
+		assert_eq!(joined.as_os_str(), expected, "while testing '{base}' + '{sub}'");
+		drop(joined);
+		assert_eq!(buf.as_os_str(), base, "original wasn't restored");
+	}
+}
+
+#[test]
+#[should_panic]
+fn join_empty_path() {
+	let mut buf = PathBuf::from("/some/path");
+	super::join_path(&mut buf, "");
+}
+
+#[test]
+fn format_duration() {
+	assert_eq!(FormattedDuration(Duration::from_secs(12)).to_string(), "00:12");
+	assert_eq!(FormattedDuration(Duration::from_mins(12) + Duration::from_secs(34)).to_string(), "12:34");
+	assert_eq!(
+		FormattedDuration(Duration::from_hours(12) + Duration::from_mins(34) + Duration::from_secs(56))
+			.to_string(),
+		"12:34:56"
+	);
+	assert_eq!(
+		FormattedDuration(Duration::from_hours(24 + 2) + Duration::from_mins(3) + Duration::from_secs(4))
+			.to_string(),
+		"1d 02:03:04"
+	);
+}
+
+#[test]
+fn common_prefix() {
+	use super::common_prefix;
+
+	let all = [
+		"/foo/bar/baz/one.txt",
+		"/foo/bar/quux/quuux/two.txt",
+		"/foo/bar/baz/foo/bar.txt",
+	];
+
+	let result = common_prefix(all.into_iter());
+	assert_eq!(result.as_deref(), Some(Path::new("/foo/bar")));
+}
+
+#[test]
+fn common_prefix_none() {
+	use super::common_prefix;
+
+	let all = ["foo/bar/baz.txt", "bar/baz/qux.txt", "baz/qux.txt"];
+
+	let result = common_prefix(all.into_iter());
+	assert_eq!(result, None);
 }

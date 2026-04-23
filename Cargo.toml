@@ -31,6 +31,7 @@ cfg-if = "1.0.4"
 clap = { version = "4.6.1", default-features = false, features = ["std", "color", "help", "usage", "derive"] }
 color-print = "0.3.7"
 fast-glob = "1.0.1"
+indicatif = { version = "0.18.4", default-features = false, features = ["unicode-width"] }
 paste = "1.0.15"
 rayon = "1.12.0"
 ryu = "1.0.23"
@@ -71,6 +72,7 @@ inline_always = "allow"
 match_bool = "allow"
 ignored_unit_patterns = "allow"
 struct_excessive_bools = "allow"
+should_panic_without_expect = "allow"
 
 # restriction
 todo = "deny"
