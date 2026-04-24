@@ -58,6 +58,13 @@ impl From<i64> for Timestamp {
 impl From<SystemTime> for Timestamp {
 	#[inline]
 	fn from(value: SystemTime) -> Self {
+		From::from(&value)
+	}
+}
+
+impl From<&SystemTime> for Timestamp {
+	#[inline]
+	fn from(value: &SystemTime) -> Self {
 		let ts = match value.duration_since(SystemTime::UNIX_EPOCH) {
 			Ok(d) => d.as_secs(),
 			Err(e) => e.duration().as_secs(),
