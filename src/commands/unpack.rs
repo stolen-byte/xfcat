@@ -15,9 +15,9 @@ use rayon::prelude::*;
 use crate::{commands::common::FilterArgs, log};
 use xf::{
 	cat::{self, Entry, Result as CatResult},
+	fs::path::{self, PathContext},
 	io::{StreamCopier, TeeWriter},
-	md5,
-	utils::{self, PathContext},
+	md5, utils,
 };
 
 // =============================================================================
@@ -59,7 +59,7 @@ impl Command {
 		writeln!(stdout().lock(), cstr!("<b>::</> extracting packages..."))?;
 
 		let jobs = build_jobs(&self.inputs, &self.filter, &self.out, self.use_subdirs);
-		let prefix = utils::common_prefix(jobs.iter().map(|j| j.source.as_path())).unwrap_or_default();
+		let prefix = path::common_prefix(jobs.iter().map(|j| j.source.as_path())).unwrap_or_default();
 
 		jobs.into_par_iter().for_each(|job| {
 			// NOTE:
@@ -176,7 +176,7 @@ fn extract_all(job: JobData, verify: bool, pb: &ProgressBar) -> Result<()> {
 	let mut buf = job.dest;
 
 	for entry in job.entries {
-		let dest = utils::join_path(&mut buf, &entry.path);
+		let dest = path::join_path(&mut buf, &entry.path);
 		if let Some(parent) = dest.parent() {
 			fs::create_dir_all(parent).with_context(|| parent.as_context())?;
 		}

@@ -16,7 +16,8 @@ use crate::{
 };
 use xf::{
 	cat::{self, Entry, Result as CatResult},
-	utils::{self, PathContext, SizeFormat},
+	fs::path::PathContext,
+	utils::{self, SizeFormat},
 };
 
 // =============================================================================

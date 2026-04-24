@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 mod formatting;
-mod path;
 mod size;
 mod timestamp;
 
@@ -15,19 +14,7 @@ mod tests;
 const PB_TEMPLATE: &str = " {wide_msg} {binary_bytes:>11} {binary_bytes_per_sec:>13.green} {elapsed} [{bar:.cyan/white}] {percent:>3}%";
 const PB_CHARS: &str = "#>-";
 
-pub use {formatting::*, path::*, size::*, timestamp::*};
-
-// =============================================================================
-// small helper for adding paths to an error context
-pub trait PathContext {
-	fn as_context(&self) -> String;
-}
-
-impl<P: AsRef<std::path::Path>> PathContext for P {
-	fn as_context(&self) -> String {
-		self.as_ref().display().to_string()
-	}
-}
+pub use {formatting::*, size::*, timestamp::*};
 
 // =============================================================================
 pub fn init_threadpool(threads: Option<usize>) {
