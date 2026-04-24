@@ -59,7 +59,16 @@ impl Command {
 		writeln!(stdout().lock(), cstr!("<b>::</> extracting packages..."))?;
 
 		let jobs = build_jobs(&self.inputs, &self.filter, &self.out, self.use_subdirs);
-		let prefix = path::common_prefix(jobs.iter().map(|j| j.source.as_path())).unwrap_or_default();
+		if jobs.is_empty() {
+			writeln!(stdout().lock(), cstr!("<b>::</> nothing to do\n"))?;
+			return Ok(());
+		}
+
+		let prefix = if jobs.len() > 1 {
+			path::common_prefix(jobs.iter().map(|j| j.source.as_path()))
+		} else {
+			jobs.first().unwrap().source.parent().map(ToOwned::to_owned)
+		};
 
 		jobs.into_par_iter().for_each(|job| {
 			// NOTE:
@@ -68,7 +77,11 @@ impl Command {
 			// it is also for this reason we don't include a spinner in the style template, as
 			// they look absolutely weird without steady tick.
 			let pb = utils::add_progress(job.total_size, &mp);
-			let dpath = job.source.strip_prefix(&prefix).unwrap();
+			let dpath = prefix.as_ref().map_or_else(
+				|| Path::new(job.source.file_name().unwrap()),
+				|p| job.source.strip_prefix(p).unwrap(),
+			);
+
 			pb.set_message(dpath.to_string_lossy().into_owned());
 
 			match extract_all(job, !self.no_verify, &pb) {
