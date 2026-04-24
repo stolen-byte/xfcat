@@ -18,6 +18,7 @@ cli! {
 	commands = {
 		list: "list contents specified packages.",
 		unpack: "extract contents of specified packages.",
+		pack: "pack a directory into a mod package",
 	}
 }
 
