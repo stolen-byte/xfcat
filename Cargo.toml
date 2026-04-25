@@ -37,6 +37,9 @@ rayon = "1.12.0"
 ryu = "1.0.23"
 time = { version = "0.3.47", default-features = false }
 
+[build-dependencies]
+semver = "1.0.28"
+
 [lints.rust]
 future_incompatible = { level = "warn", priority = -1 }
 nonstandard_style = { level = "warn", priority = -1 }
