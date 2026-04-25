@@ -11,6 +11,14 @@ fn as_context() {
 
 #[test]
 fn join_path() {
+	macro_rules! check {
+		($left:ident, $right:ident, $msg:expr) => {
+			let l = $left.as_os_str().to_str().unwrap().replace('\\', "/");
+			let r = $right.replace('\\', "/");
+			assert_eq!(l, r, $msg);
+		};
+	}
+
 	let tests = [
 		// base, sub, expected
 		("", "/some/file.txt", "/some/file.txt"), // empty base path is fine
@@ -26,9 +34,9 @@ fn join_path() {
 	for (base, sub, expected) in tests {
 		let mut buf = PathBuf::from(base);
 		let joined = path::join_path(&mut buf, sub);
-		assert_eq!(joined.as_os_str(), expected, "while testing '{base}' + '{sub}'");
+		check!(joined, expected, "while testing '{base}' + '{sub}'");
 		drop(joined);
-		assert_eq!(buf.as_os_str(), base, "original wasn't restored");
+		check!(buf, base, "original wasn't restored");
 	}
 }
 

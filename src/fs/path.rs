@@ -69,7 +69,9 @@ pub fn join_path<P: AsRef<Path>>(base: &mut PathBuf, rest: P) -> JoinedPath<'_> 
 
 	assert!(!rest.as_os_str().is_empty(), "attempted to join_path with an empty sub-path");
 
-	if len > 0 && rest.is_absolute() {
+	if len > 0 {
+		// remove any leading separators from `rest`, because `PathBuf::push` will unceremoniously
+		// replace the entire path if its there, which is both annoying, and unexpected.
 		// i refuse to iterate over components() and push() each one
 		// reasoning: `push()` will unnecessarily call `components()` itself on each iteration.
 		let mut bytes = rest.as_os_str().as_encoded_bytes();
