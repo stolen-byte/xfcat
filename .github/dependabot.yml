@@ -1,0 +1,25 @@
+version: 2
+updates:
+  # CI/Actions
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - '*'
+    commit-message:
+      prefix: 'chore(ci-deps)'
+
+  # Rust deps
+  # - package-ecosystem: cargo
+  #   directory: '/'
+  #   schedule:
+  #     interval: monthly
+  #   groups:
+  #     deps:
+  #       patterns:
+  #         - '*'
+  #   commit-message:
+  #     prefix: 'chore(deps)'
