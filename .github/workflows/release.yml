@@ -1,0 +1,100 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v?[0-9]+.[0-9]+.[0-9]+*'
+
+permissions:
+  contents: write
+
+env:
+  GH_REPO: ${{ github.repository }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  GH_TELEMETRY: 0
+  XFCAT_VERSION: ${{ github.ref_name }}
+
+jobs:
+  setup:
+    name: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Draft Release
+        id: draft
+        run: |
+          pre=true
+          if [[ "$XFCAT_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-.*)? ]]; then
+            if [[ -z "${BASH_REMATCH[1]}" ]]; then
+           	  pre=false
+            fi
+          fi
+          gh release create $XFCAT_VERSION --draft --prerelease=$pre --verify-tag --title "Release $XFCAT_VERSION"
+
+  build:
+    name: build-release
+    needs: [setup]
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Build
+        run: |
+          cargo build --release --verbose
+
+      - name: Determine Archive name
+        shell: bash
+        run: |
+          os="$(echo "${{ runner.os }}" | perl -ne 'print lc')"
+          arch="$(echo "${{ runner.arch }}" | perl -ne 'print lc')"
+          echo "ARCHIVE=xfcat-${XFCAT_VERSION}-${os}-${arch}" >>$GITHUB_ENV
+
+      - name: Archive (Windows)
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          zipfile="${ARCHIVE}.zip"
+          sumfile="${ARCHIVE}.zip.sha256"
+          # -------------------------------------------------
+          7z a "$zipfile" "./target/release/xfcat.exe"
+          certutil -hashfile "$zipfile" SHA256 >"$sumfile"
+          # -------------------------------------------------
+          echo "ASSET=$zipfile" >>$GITHUB_ENV
+          echo "ASSET_SUM=$sumfile" >>$GITHUB_ENV
+
+      - name: Archive (Unix)
+        if: ${{ !startsWith(matrix.os, 'windows') }}
+        shell: bash
+        run: |
+          tarball="${ARCHIVE}.tar.gz"
+          sumfile="${ARCHIVE}.tar.gz.sha256"
+          # -------------------------------------------------
+          strip ./target/release/xfcat
+          tar czf "$tarball" -C target/release xfcat
+          shasum -a 256 "$tarball" >"$sumfile"
+          # -------------------------------------------------
+          echo "ASSET=$tarball" >>$GITHUB_ENV
+          echo "ASSET_SUM=$sumfile" >>$GITHUB_ENV
+
+      - name: Upload Artifacts
+        shell: bash
+        run: |
+          gh release upload "$XFCAT_VERSION" "${{ env.ASSET }}" "${{ env.ASSET_SUM }}"
+
+  publish:
+    name: publish-release
+    needs: [setup, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: finalise release
+        run: |
+          gh release edit "$XFCAT_VERSION" --draft=false
