@@ -1,0 +1,91 @@
+name: ci
+
+on:
+  pull_request:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  # Because path filters *still* don't play nicely with required checks
+  spec:
+    name: Decide which steps to run
+    if: ${{ github.event_name == 'pull_request' }}
+    outputs:
+      need_rebuild: ${{ steps.filter.outputs.need_rebuild }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+        with:
+          # arbitrary depth: enough to make an informed decision, but not take too long to fetch
+          fetch-depth: ${{ github.ref == 'refs/heads/master' && 2 || 300 }}
+          submodules: false
+
+      - name: Generate output filters
+        id: filter
+        run: |
+          # Anything that affects the build/tests
+          CODE_REGEX='^(src/|tests/|Cargo\.(toml|lock)|\.cargo/)'
+          # ----------------------------------------------------------------------
+          # We're in a PR context, in a detached HEAD state, so make origin/<BASE_REF> available
+          # Note: this compares the *entire* branch, from the point it was forked, not just the last commit
+          git fetch origin ${{ github.base_ref }} --no-recurse-submodules --depth 300
+          BASE_REV=$(git merge-base "origin/${{ github.base_ref }}" HEAD)
+          TOPIC_REV=${{ github.sha }}
+          # ----------------------------------------------------------------------
+          if git diff --name-only $BASE_REV...$TOPIC_REV | grep -qP "$CODE_REGEX"; then
+            echo "need_rebuild=true" >>$GITHUB_OUTPUT
+          else
+            echo "need_rebuild=false" >>$GITHUB_OUTPUT
+          fi
+
+  build:
+    needs: [spec]
+    if: |
+      !cancelled() &&
+      (needs.spec.outputs.need_rebuild == 'true' || needs.spec.result == 'skipped')
+    env:
+      RUST_BACKTRACE: '1'
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Disable git CRLF shenanigans (it breaks cargo fmt for xplat stuff)
+        if: ${{ startsWith(matrix.os, 'windows') }}
+        shell: bash
+        run: git config --global core.autocrlf input
+
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 1
+          submodules: recursive
+
+      - name: Check formatting
+        run: cargo fmt --all --check
+
+      - name: Run Clippy
+        run: cargo clippy --no-deps
+
+      - name: Build
+        run: cargo build
+
+      - name: Run Tests
+        run: cargo test --all
+
+  # the only purpose of this job is to allow usage as a required status check, because matrix jobs are borked as required checks
+  # if *any* build fails (or is cancelled), this fails
+  # if all builds succeed, this is skipped (status = success)
+  # if build is skipped, this is skipped (status = success)
+  build-all:
+    needs: build
+    if: failure() || cancelled()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Signal failure
+        run: exit 1
