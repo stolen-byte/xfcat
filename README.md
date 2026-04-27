@@ -1,6 +1,5 @@
 [![Build status](https://github.com/stolen-byte/xfcat/workflows/ci/badge.svg)](https://github.com/stolen-byte/xfcat/actions)
 [![Latest](https://img.shields.io/github/v/release/stolen-byte/xfcat)](https://github.com/stolen-byte/xfcat/releases/latest)
-[![License](https://img.shields.io/github/license/stolen-byte/xfcat)](LICENSE)
 ![Windows](https://img.shields.io/badge/platform-windows-blue)
 ![Linux](https://img.shields.io/badge/platform-linux-blue)
 ![macOS](https://img.shields.io/badge/platform-macos-blue)
