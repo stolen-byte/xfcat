@@ -9,26 +9,32 @@ permissions:
   contents: write
 
 env:
+  # vars for gh cli
   GH_REPO: ${{ github.repository }}
   GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   GH_TELEMETRY: 0
-  XFCAT_VERSION: ${{ github.ref_name }}
+  XFCAT_TAG: ${{ github.ref_name }}
 
 jobs:
   setup:
     name: setup
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.draft.outputs.version }}
     steps:
       - name: Create Draft Release
         id: draft
+        shell: bash
         run: |
+          version="${XFCAT_TAG#v}"
           pre=true
-          if [[ "$XFCAT_VERSION" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+(-.*)? ]]; then
+          if [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-.*)? ]]; then
             if [[ -z "${BASH_REMATCH[1]}" ]]; then
            	  pre=false
             fi
           fi
-          gh release create $XFCAT_VERSION --draft --prerelease=$pre --verify-tag --title "Release $XFCAT_VERSION"
+          gh release create "$XFCAT_TAG" --draft --prerelease=$pre --verify-tag --title "Release $version"
+          echo "version=$version" >>$GITHUB_OUTPUT
 
   build:
     name: build-release
@@ -40,6 +46,9 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     runs-on: ${{ matrix.os }}
+    env:
+      XFCAT_VERSION: ${{ needs.setup.outputs.version }}
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -88,13 +97,15 @@ jobs:
       - name: Upload Artifacts
         shell: bash
         run: |
-          gh release upload "$XFCAT_VERSION" "${{ env.ASSET }}" "${{ env.ASSET_SUM }}"
+          gh release upload "$XFCAT_TAG" "${{ env.ASSET }}" "${{ env.ASSET_SUM }}"
 
   publish:
     name: publish-release
     needs: [setup, build]
     runs-on: ubuntu-latest
+    env:
+      XFCAT_VERSION: ${{ needs.setup.outputs.version }}
     steps:
       - name: finalise release
         run: |
-          gh release edit "$XFCAT_VERSION" --draft=false
+          gh release edit "$XFCAT_TAG" --draft=false
