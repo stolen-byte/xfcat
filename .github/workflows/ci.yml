@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           # arbitrary depth: enough to make an informed decision, but not take too long to fetch
           fetch-depth: ${{ github.ref == 'refs/heads/master' && 2 || 300 }}
@@ -61,7 +61,7 @@ jobs:
         shell: bash
         run: git config --global core.autocrlf input
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 1
           submodules: recursive
