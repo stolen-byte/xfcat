@@ -1,0 +1,43 @@
+name: Bug Report
+description: Report a bug
+title: "[Bug]: "
+labels: ["bug"]
+assignees:
+  - stolen-byte
+body:
+  - type: input
+    id: version
+    attributes:
+      label: xfcat version
+      description: exact version of xfcat where the bug occurs (including any commit hash)
+      placeholder: v...
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: System
+      description: your system and version, if applicable.
+      value: |
+        OS and Version [eg: Windows 11, Linux (please specify distro & kernel version)]
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Summary
+      description: Provide a brief summary of the bug
+      placeholder: |
+        describe the bug...
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Provide detailed repro steps which lead to the bug
+      placeholder: |
+        1. ...
+    validations:
+      required: true
