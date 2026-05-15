@@ -1,4 +1,11 @@
 [target.'cfg(any(target_arch = "x86", target_arch = "x86_64"))']
+rustflags = ["-Ctarget-feature=+avx2"]
+
+[target.'cfg(all(target_env = "msvc", target_os = "windows"))']
+rustflags = ["-Ctarget-feature=+crt-static"]
+
+[target.'cfg(target_env = "musl")']
 rustflags = [
-	"-Ctarget-feature=+avx2"
+	"-Ctarget-feature=+crt-static",
+	"-Clink-self-contained=yes"
 ]
